@@ -112,7 +112,7 @@ namespace Audune.Persistence
       // Evaluate the path as a getter on the specified state
       internal override State EvaluateGetter(State state)
       {
-        var parentState = _parent.EvaluateGetter(state);
+        var parentState = _parent?.EvaluateGetter(state) ?? state;
 
         if (parentState is not ObjectState objectState)
           throw new PathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
@@ -125,7 +125,7 @@ namespace Audune.Persistence
       // Evaluate the path as a setter on the specified state
       internal override void EvaluateSetter(State state, State value)
       {
-        var parentState = _parent.EvaluateGetter(state);
+        var parentState = _parent?.EvaluateGetter(state) ?? state;
 
         if (parentState is not ObjectState objectState)
           throw new PathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
