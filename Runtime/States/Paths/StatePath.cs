@@ -2,8 +2,8 @@ using System;
 
 namespace Audune.Persistence
 {
-  // Class that defines a path
-  public abstract class Path
+  // Class that defines a path in a state
+  public abstract class StatePath
   {
     // Evaluate the path as a getteron the specified state
     internal abstract State EvaluateGetter(State state);
@@ -13,9 +13,9 @@ namespace Audune.Persistence
 
 
     // Parse a path
-    public static Path Parse(string input)
+    public static StatePath Parse(string input)
     {
-      var path = default(Path);
+      var path = default(StatePath);
 
       var scanner = new Scanner(input);
       while (!scanner.AtEnd)
@@ -41,24 +41,24 @@ namespace Audune.Persistence
     }
 
     // Parse a path using an implicit operator
-    public static implicit operator Path(string input) 
+    public static implicit operator StatePath(string input) 
     { 
-      return Path.Parse(input);
+      return StatePath.Parse(input);
     }
 
 
     // Class that defines an indexer path
-    internal sealed class Index : Path
+    internal sealed class Index : StatePath
     {
       // The parent of the path
-      private readonly Path _parent;
+      private readonly StatePath _parent;
 
       // The index of the path
       private readonly int _index;
 
 
       // Constructor
-      internal Index(Path parent, int index)
+      internal Index(StatePath parent, int index)
       {
         _parent = parent;
         _index = index;
@@ -71,9 +71,9 @@ namespace Audune.Persistence
         var parentState = _parent?.EvaluateGetter(state) ?? state;
 
         if (parentState is not ListState listState)
-          throw new PathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
+          throw new StatePathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
         else if (!listState.TryGet<State>(_index, out var itemState))
-          throw new PathEvaluationException($"Undefined item with index {_index}");
+          throw new StatePathEvaluationException($"Undefined item with index {_index}");
         else
           return itemState;
       }
@@ -84,7 +84,7 @@ namespace Audune.Persistence
         var parentState = _parent?.EvaluateGetter(state) ?? state;
 
         if (parentState is not ListState listState)
-          throw new PathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
+          throw new StatePathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
         else
           listState.Set(_index, value);
       }
@@ -92,17 +92,17 @@ namespace Audune.Persistence
 
 
     // Class that defines an accessor path
-    internal sealed class Access : Path
+    internal sealed class Access : StatePath
     {
       // The parent of the path
-      private readonly Path _parent;
+      private readonly StatePath _parent;
 
       // The name of the path
       private readonly string _name;
 
 
       // Constructor
-      internal Access(Path parent, string name)
+      internal Access(StatePath parent, string name)
       {
         _parent = parent;
         _name = name;
@@ -115,9 +115,9 @@ namespace Audune.Persistence
         var parentState = _parent?.EvaluateGetter(state) ?? state;
 
         if (parentState is not ObjectState objectState)
-          throw new PathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
+          throw new StatePathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
         else if (!objectState.TryGet<State>(_name, out var fieldState))
-          throw new PathEvaluationException($"Undefined field with name {_name}");
+          throw new StatePathEvaluationException($"Undefined field with name {_name}");
         else 
           return fieldState;
       }
@@ -128,7 +128,7 @@ namespace Audune.Persistence
         var parentState = _parent?.EvaluateGetter(state) ?? state;
 
         if (parentState is not ObjectState objectState)
-          throw new PathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
+          throw new StatePathEvaluationException($"Expected state of type {typeof(ObjectState)} but found {state.GetType()}");
         else
           objectState.Set(_name, value);
       }
