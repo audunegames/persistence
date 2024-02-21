@@ -61,7 +61,7 @@ namespace Audune.Persistence
     // Return the string representation of the file
     public override string ToString()
     {
-      return $"{GetType()} {{adapter: \"{adapter.adapterName}\", path: \"{path}\"}}";
+      return $"{adapter.adapterName}:/{path}";
     }
 
 

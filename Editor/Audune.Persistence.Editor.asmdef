@@ -1,0 +1,18 @@
+{
+    "name": "Audune.Persistence.Editor",
+    "rootNamespace": "Audune.Persistence.Editor",
+    "references": [
+        "GUID:0c6a492feeded364ab19e08343a22086"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
