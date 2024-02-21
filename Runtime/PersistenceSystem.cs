@@ -1,194 +1,225 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEngine;
 
 namespace Audune.Persistence
 {
-  using FilePath = System.IO.Path;
-
-
   // Class that defines the system for persistent data
+  [AddComponentMenu("Audune Persistence/Persistence System")]
   public sealed class PersistenceSystem : MonoBehaviour
   {
-    // Persistence system properties
-    [SerializeField, Tooltip("The directory for persistent data, relative to the persistent data path of the application")]
-    private string _directory = "Saves";
-    [SerializeField, Tooltip("The extension for persistent data files")]
-    private string _extension = ".save";
+    // Enum that defines the backend type of the persistence system
+    public enum BackendType
+    {
+      [InspectorName("MessagePack")]
+      MessagePack
+    }
 
-    // PErsistent system state
-    private Backend _backend;
+
+    // Persistence system properties
+    [SerializeField, Tooltip("The type of the backend to use")]
+    private BackendType _backendType = BackendType.MessagePack;
+
+    // Internal state of the persistence system
+    private List<IAdapter> _adapters = new List<IAdapter>();
+    private IBackend _backend;
 
     // Persistence system events
-    public event Action<string> OnPersistentDataSaved;
-    public event Action<string> OnPersistentDataLoaded;
-    public event Action<string> OnPersistentDataDeleted;
-
-
-    // Return the directory
-    public string directory => _directory;
-
-    // Return the extension
-    public string extension => _extension;
-
-    // Return the absolute directory
-    public string absoluteDirectory => FilePath.Combine(Application.persistentDataPath, _directory);
+    public event Action<File> OnFileRead;
+    public event Action<File> OnFileWritten;
+    public event Action<File, File> OnFileMoved;
+    public event Action<File, File> OnFileCopied;
+    public event Action<File> OnFileDeleted;
 
 
     // Awake is called when the script instance is being loaded
     private void Awake()
     {
       // Initialize the backend
-      _backend = new MessagePackBackend();
+      _backend = _backendType switch {
+        BackendType.MessagePack => new MessagePackBackend(),
+        _ => throw new PersistenceException($"Unknown backend type {_backendType}"),
+      };
     }
 
 
-    // Return the path for a name
-    public string GetPathForName(string name)
+    #region Adapter management
+    // Return all registered adapters
+    public IEnumerable<IAdapter> GetAdapters()
     {
-      return FilePath.Combine(absoluteDirectory, $"{name}{_extension}");
+      return _adapters;
     }
 
-
-    // Enumerate over the existing persistent data
-    public IEnumerable<string> Enumerate(Func<string, bool> predicate = null)
+    // Return all enabled registered adapters
+    public IEnumerable<IAdapter> GetEnabledAdapters()
     {
-      // If the directory doesn't exist, return an empty enumerable
-      if (!Directory.Exists(absoluteDirectory))
-        return Enumerable.Empty<string>();
-
-      // Enumerate over the files in the directory that match the predicate
-      return Directory.EnumerateFiles(absoluteDirectory, $"*{_extension}")
-        .Select(path => FilePath.GetFileNameWithoutExtension(path))
-        .Where(path => predicate == null || predicate(path));
+      return _adapters.Where(adapter => adapter.adapterEnabled);
     }
 
-    // Return if a persistent data file exists
-    public bool Exists(string name)
+    // Return if an adapter with the specified name exists
+    public bool TryGetAdapter(string name, out IAdapter adapter)
     {
-      // Get the path for the name
-      var path = GetPathForName(name);
-
-      // Return if the file exists
-      return File.Exists(path);
+      adapter = _adapters.Find(adapter => adapter.adapterName == name);
+      return adapter != null;
     }
 
-    // Save the specified state to a persistent data file
-    public void Save(string name, State state)
+    // Return the adapter with the specified name
+    public IAdapter GetAdapter(string name)
     {
-      // Get the path for the name
-      var path = GetPathForName(name);
-
-      try
-      {
-        // Create the save directory if it doesn't exist
-        if (!Directory.Exists(absoluteDirectory))
-          Directory.CreateDirectory(absoluteDirectory);
-
-        // Serialize the state
-        var data = _backend.Serialize(state);
-
-        // Write the data to the stream
-        File.WriteAllBytes(path, data);
-
-        // Invoke the saved event
-        OnPersistentDataSaved?.Invoke(name);
-      }
-      catch (IOException ex)
-      {
-        throw new PersistenceException($"Could not write the data: {ex.Message}", ex);
-      }
+      if (TryGetAdapter(name, out IAdapter adapter))
+        return adapter;
+      else
+        throw new PersistenceException($"Could not find a registered adapter with name {name}");
     }
 
-    // Save the specified serializable object to a persistent data file
-    public void Save<TState>(string name, ISerializable<TState> serializable) where TState : State
+    // Return if there is a first adapter that is enabled
+    public bool TryGetFirstEnabledAdapter(out IAdapter adapter)
+    {
+      adapter = GetEnabledAdapters().FirstOrDefault();
+      return adapter != null;
+    }
+
+    // Return the first adapter that is enabled
+    public IAdapter GetFirstEnabledAdapter()
+    {
+      if (TryGetFirstEnabledAdapter(out IAdapter adapter))
+        return adapter;
+      else
+        throw new PersistenceException("Could not find an accessible registered adapter");
+    }
+
+    // Register an adapter
+    public void RegisterAdapter(IAdapter adapter)
+    {
+      _adapters.Add(adapter);
+    }
+
+    // Unregister an adapter
+    public void UnregisterAdapter(IAdapter adapter)
+    {
+      _adapters.Remove(adapter);
+    }
+    #endregion
+
+    // List the available files
+    public IEnumerable<File> List(Predicate<string> predicate = null)
+    {
+      return _adapters.SelectMany(adapter => adapter.List(predicate).Select(path => adapter.GetFile(path)));
+    }
+
+    // Return if the specified file exists
+    public bool Exists(File file)
+    {
+      return file.Exists();
+    }
+
+    // Read a state from the specified file
+    public TState Read<TState>(File file) where TState : State
+    {
+      // Read the data
+      var data = file.Read();
+
+      // Deserialize the state
+      var state = _backend.Deserialize(data);
+
+      // Check if the state is the correct type
+      if (state is not TState expectedState)
+        throw new PersistenceException($"Could not cast the state: expected state of type {typeof(TState)} but got {state.GetType()}");
+
+      // Invoke the read event
+      OnFileRead?.Invoke(file);
+
+      // Return the state
+      return expectedState;
+    }
+
+    // Read a deserializable object from the specified file into an existing object
+    public void Read<TState, TDeserializable>(File file, TDeserializable deserializable) where TState : State where TDeserializable : IDeserializable<TState>
+    {
+      var state = Read<TState>(file);
+      deserializable.Deserialize(state);
+    }
+
+    // Read a deserializable object from the specified file into an existing object with the provided context
+    public void Read<TState, TContext, TDeserializable>(File file, TDeserializable deserializable, TContext context) where TState : State where TDeserializable : IDeserializable<TState, TContext>
+    {
+      var state = Read<TState>(file);
+      deserializable.Deserialize(state, context);
+    }
+
+    // Write the specified state to the specified file
+    public void Write(File file, State state)
+    {
+      // Serialize the state
+      var data = _backend.Serialize(state);
+
+      // Write the data
+      file.Write(data);
+
+      // Invoke the written event
+      OnFileWritten?.Invoke(file);
+    }
+
+    // Write the specified serializable object to the specified file
+    public void Write<TState>(File file, ISerializable<TState> serializable) where TState : State
     {
       var state = serializable.Serialize();
-      Save(name, state);
+      Write(file, state);
     }
 
-    // Save the specified serializable object to a persistent data file with the provided context
-    public void Save<TState, TContext>(string name, ISerializable<TState, TContext> serializable, TContext context) where TState : State
+    // Write the specified serializable object to the specified file with the provided context
+    public void Write<TState, TContext>(File file, ISerializable<TState, TContext> serializable, TContext context) where TState : State
     {
       var state = serializable.Serialize(context);
-      Save(name, state);
+      Write(file, state);
     }
 
-    // Load a state from a persistent data file
-    public TState Load<TState>(string name) where TState: State
+    // Move the specified file to a new destination file
+    public void Move(File file, File destination)
     {
-      // Get the path for the name
-      var path = GetPathForName(name);
-
-      try
+      // Move the file
+      if (file.adapter == destination.adapter)
       {
-        // Read the data from the stream
-        var data = File.ReadAllBytes(path);
-
-        // Deserialize the state
-        var state = _backend.Deserialize(data);
-
-        // Check if the state is the correct type
-        if (state is not TState expectedState)
-          throw new PersistenceException($"Could not cast the state: expected state of type {typeof(TState)} but got {state.GetType()}");
-
-        // Invoke the loaded event
-        OnPersistentDataLoaded?.Invoke(name);
-
-        return expectedState;
-          
+        file.Move(destination.path);
       }
-      catch (IOException ex)
+      else
       {
-        throw new PersistenceException($"Could not read the data: {ex.Message}", ex);
+        var data = file.Read();
+        destination.Write(data);
+        file.Delete();
       }
+
+      // Invoke the moved event
+      OnFileMoved?.Invoke(file, destination);
     }
 
-    // Load a deserializable object from a persistent data file
-    public TDeserializable Load<TState, TDeserializable>(string name) where TState : State where TDeserializable : IDeserializable<TState>, new()
+    // Copy the specified file to a new destination file
+    public void Copy(File file, File destination)
     {
-      var state = Load<TState>(name);
-      var deserializable = new TDeserializable();
-      deserializable.Deserialize(state);
-      return deserializable;
+      // Copy the file
+      if (file.adapter == destination.adapter)
+      {
+        file.Move(destination.path);
+      }
+      else
+      {
+        var data = file.Read();
+        destination.Write(data);
+      }
+
+      // Invoke the copied event
+      OnFileCopied?.Invoke(file, destination);
     }
 
-    // Load a deserializable object from a persistent data file with the provided context
-    public TDeserializable Load<TState, TContext, TDeserializable>(string name, TContext context) where TState : State where TDeserializable : IDeserializable<TState, TContext>, new()
+    // Delete the specified source file
+    public void Delete(File source)
     {
-      var state = Load<TState>(name);
-      var deserializable = new TDeserializable();
-      deserializable.Deserialize(state, context);
-      return deserializable;
-    }
-
-    // Load a deserializable object from a persistent data file into an existing object
-    public void LoadInto<TState, TDeserializable>(string name, TDeserializable deserializable) where TState : State where TDeserializable : IDeserializable<TState>
-    {
-      var state = Load<TState>(name);
-      deserializable.Deserialize(state);
-    }
-
-    // Load a deserializable object from a persistent data file into an existing object with the provided context
-    public void LoadInto<TState, TContext, TDeserializable>(string name, TDeserializable deserializable, TContext context) where TState : State where TDeserializable : IDeserializable<TState, TContext>
-    {
-      var state = Load<TState>(name);
-      deserializable.Deserialize(state, context);
-    }
-
-    // Delete a persistent data file
-    public void Delete(string name)
-    {
-      // Get the file path for the name
-      var filePath = GetPathForName(name);
-
       // Delete the file
-      File.Delete(filePath);
+      source.Delete();
 
       // Invoke the deleted event
-      OnPersistentDataDeleted?.Invoke(name);
+      OnFileDeleted?.Invoke(source);
     }
   }
 }

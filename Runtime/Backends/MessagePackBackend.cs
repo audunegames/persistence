@@ -3,10 +3,10 @@ using MessagePack;
 namespace Audune.Persistence
 {
   // Class that defines a MessagePack backend for the persistence system
-  public sealed class MessagePackBackend : Backend
+  public sealed class MessagePackBackend : IBackend
   {
     // Serialize a state to a stream of bytes
-    public override byte[] Serialize(State state)
+    public byte[] Serialize(State state)
     {
       try
       {
@@ -14,12 +14,12 @@ namespace Audune.Persistence
       }
       catch (MessagePackSerializationException ex)
       {
-        throw new PersistenceException($"Could not serialize the data: {ex.Message}", ex);
+        throw new BackendException($"Could not serialize the data: {ex.Message}", ex);
       }
     }
 
     // Deserialize a state from a stream of bytes
-    public override State Deserialize(byte[] data)
+    public State Deserialize(byte[] data)
     {
       try
       {
@@ -27,7 +27,7 @@ namespace Audune.Persistence
       }
       catch (MessagePackSerializationException ex)
       {
-        throw new PersistenceException($"Could not deserialize the data: {ex.Message}", ex);
+        throw new BackendException($"Could not deserialize the data: {ex.Message}", ex);
       }
     }
   }

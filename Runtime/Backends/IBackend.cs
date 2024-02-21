@@ -1,7 +1,7 @@
 namespace Audune.Persistence
 {
-  // Class that defines a backend for the persistence system
-  public abstract class Backend
+  // Interface that defines a backend for the persistence system
+  public interface IBackend
   {
     // Serialize a state to a stream of bytes
     public abstract byte[] Serialize(State state);
