@@ -1,3 +1,4 @@
+using Audune.Utils.UnityEditor.Editor;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -6,7 +7,7 @@ namespace Audune.Persistence.Editor
 {
   // Class that defines a property drawer for a file reference
   [CustomPropertyDrawer(typeof(FileReference))]
-  public class FileReferencePropertyDrawer : PropertyDrawer
+  public class FileReferenceDrawer : PropertyDrawer
   {
     // Draw the property
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -16,26 +17,20 @@ namespace Audune.Persistence.Editor
 
       EditorGUI.BeginProperty(position, label, property);
 
-      var linePosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+      var linePosition = position.AlignTop(EditorGUIUtility.singleLineHeight, EditorGUIUtility.standardVerticalSpacing, out position);
       var fieldPosition = EditorGUI.PrefixLabel(linePosition, label);
 
-      var adapterNameWidth = Mathf.Max(fieldPosition.width * 0.3f, 80.0f);
-      var adapterNamePosition = new Rect(fieldPosition.x, fieldPosition.y, adapterNameWidth, fieldPosition.height);
+      var adapterNamePosition = fieldPosition.AlignLeft(Mathf.Max(fieldPosition.width * 0.3f, 80.0f), EditorGUIUtility.standardVerticalSpacing, out fieldPosition);
       adapterName.stringValue = EditorGUI.TextField(adapterNamePosition, adapterName.stringValue);
 
-      var separatorWidth = 10.0f;
-      var separatorPosition = new Rect(fieldPosition.x + adapterNameWidth + EditorGUIUtility.standardVerticalSpacing, fieldPosition.y, separatorWidth, fieldPosition.height);
+      var separatorPosition = fieldPosition.AlignLeft(10.0f, EditorGUIUtility.standardVerticalSpacing, out fieldPosition);
       EditorGUI.LabelField(separatorPosition, ":/");
 
-      var pathPosition = new Rect(fieldPosition.x + adapterNameWidth + separatorWidth + EditorGUIUtility.standardVerticalSpacing * 2.0f, fieldPosition.y, fieldPosition.width - adapterNameWidth - separatorWidth - EditorGUIUtility.standardVerticalSpacing * 2.0f, fieldPosition.height);
-      path.stringValue = EditorGUI.TextField(pathPosition, path.stringValue);
+      path.stringValue = EditorGUI.TextField(fieldPosition, path.stringValue);
 
       var adapter = Object.FindObjectsByType<Adapter>(FindObjectsInactive.Include, FindObjectsSortMode.None).Where(a => a.adapterName == adapterName.stringValue).FirstOrDefault();
       if (adapter != null)
-      {
-        linePosition = new Rect(linePosition.x, linePosition.y + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing, linePosition.width, EditorGUIUtility.singleLineHeight);
-        EditorGUI.HelpBox(linePosition, $"Resolved to adapter \"{adapter.adapterName}\" of type {adapter.GetType()}", MessageType.None);
-      }
+        EditorGUI.HelpBox(position, $"Resolved to adapter \"{adapter.adapterName}\" of type {adapter.GetType()}", MessageType.None);
 
       EditorGUI.EndProperty();
     }

@@ -16,6 +16,10 @@ Audune Persistence can be best installed as a git package in the Unity Editor us
 https://github.com/audunegames/persistence.git
 ```
 
+Note that this package uses other packages from Audune Games, so make sure to add them to your project:
+
+* `com.audune.utils.unityeditor` ([GitHub repository](https://github.com/audunegames/unityeditor-utils.git))
+
 Note that this package uses packages from the OpenUPM registry, so make sure to add a scoped registry with the URL `https://package.openupm.com` and the following scopes before installing this package:
 
 * `net.tnrd.messagepack`
