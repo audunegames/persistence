@@ -1,12 +1,14 @@
+using Audune.Utils.UnityEditor;
 using MessagePack;
 
 namespace Audune.Persistence
 {
   // Class that defines a MessagePack backend for the persistence system
-  public sealed class MessagePackBackend : IBackend
+  [TypeDisplayName("MessagePack")]
+  public sealed class MessagePackBackend : Backend
   {
     // Serialize a state to a stream of bytes
-    public byte[] Serialize(State state)
+    public override byte[] Serialize(State state)
     {
       try
       {
@@ -19,7 +21,7 @@ namespace Audune.Persistence
     }
 
     // Deserialize a state from a stream of bytes
-    public State Deserialize(byte[] data)
+    public override State Deserialize(byte[] data)
     {
       try
       {

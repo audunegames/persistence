@@ -1,5 +1,6 @@
+using Audune.Utils.UnityEditor;
 using Audune.Utils.UnityEditor.Editor;
-using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,28 +10,73 @@ namespace Audune.Persistence.Editor
   [CustomEditor(typeof(PersistenceSystem))]
   public class PersistenceSystemEditor : UnityEditor.Editor
   {
+    // Properties of the editor
+    private SerializedProperty _persistenceFileFormat;
+
+    // Foldout state of the editor
+    private bool _settingsFoldout = true;
+    private bool _adaptersFoldout = true;
+    private bool _componentsFoldout = true;
+
+    // Generic menus for types
+    private GenericMenu _adapterTypesMenu;
+
+
     // Return the target object of the editor
     public new PersistenceSystem target => serializedObject.targetObject as PersistenceSystem;
 
 
+    // OnEnable is called when the component becomes enabled
+    protected void OnEnable()
+    {
+      // Initialize the properties
+      _persistenceFileFormat = serializedObject.FindProperty("_persistenceFileFormat");
+
+      // Intialize the generic menus for types
+      _adapterTypesMenu = typeof(Adapter).CreateGenericMenuForChildTypes(TypeDisplayOptions.DontShowNamespace, null, type => target.gameObject.AddComponent(type));
+    }
+
     // Draw the inspector GUI
     public override void OnInspectorGUI()
     {
-      base.OnInspectorGUI();
+      _settingsFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(_settingsFoldout, "Settings");
+      if (_settingsFoldout)
+      {
+        EditorGUILayout.PropertyField(_persistenceFileFormat);
 
-      EditorGUILayout.Space();
-      EditorGUILayout.LabelField("Components", EditorStyles.boldLabel);
+        EditorGUILayout.Space();
+      }
+      EditorGUILayout.EndFoldoutHeaderGroup();
 
-      var addAdapterPosition = EditorGUILayout.GetControlRect();
-      addAdapterPosition = EditorGUI.PrefixLabel(addAdapterPosition, new GUIContent("Add Adapter"));
-      EditorGUIExtensions.GenericMenuDropdown(addAdapterPosition, new GUIContent("(select)"), typeof(Adapter).CreateGenericMenuForChildTypes(Utils.UnityEditor.TypeDisplayOptions.None, null, AddAdapterComponent));
-    }
+      _adaptersFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(_adaptersFoldout, "Registered Adapters");
+      if (_adaptersFoldout)
+      {
+        var adapters = target.GetAdapters().ToList();
+        if (adapters.Count > 0)
+          EditorGUILayout.HelpBox(string.Join("\n", adapters.Select(a => $"• {a.GetType().ToDisplayString(TypeDisplayOptions.DontShowNamespace)} \"{a.adapterName}\" [Priority {a.adapterPriority}]")), MessageType.None);
+        else
+          EditorGUILayout.HelpBox("None", MessageType.None);
 
+        var emptyAdapterNames = adapters.Where(a => string.IsNullOrEmpty(a.adapterName)).ToList();
+        if (emptyAdapterNames.Count > 0)
+          EditorGUILayout.HelpBox($"Warning - The following adapters have no name:\n{string.Join("\n", emptyAdapterNames.Select(a => $"• {a.GetType().ToDisplayString(TypeDisplayOptions.DontShowNamespace)}"))}", MessageType.None);
 
-    // Add a new adapter component to the persistence system
-    private void AddAdapterComponent(Type adapterType)
-    {
-      target.gameObject.AddComponent(adapterType);
+        var duplicatedAdapterNames = adapters.GroupBy(a => a.adapterName).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+        if (duplicatedAdapterNames.Count > 0)
+          EditorGUILayout.HelpBox($"Warning - The following adapter names are duplicated:\n{string.Join("\n", duplicatedAdapterNames.Select(n => $"• \"{n}\""))}", MessageType.None);
+
+        EditorGUILayout.Space();
+      }
+      EditorGUILayout.EndFoldoutHeaderGroup();
+
+      _componentsFoldout = EditorGUILayout.BeginFoldoutHeaderGroup(_componentsFoldout, "Components");
+      if (_componentsFoldout)
+      {
+        var addAdapterPosition = EditorGUILayout.GetControlRect();
+        addAdapterPosition = EditorGUI.PrefixLabel(addAdapterPosition, new GUIContent("Add Adapter"));
+        EditorGUIExtensions.GenericMenuDropdown(addAdapterPosition, new GUIContent("(select)"), _adapterTypesMenu);
+      }
+      EditorGUILayout.EndFoldoutHeaderGroup();
     }
   }
 }

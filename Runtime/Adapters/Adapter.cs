@@ -4,53 +4,25 @@ using UnityEngine;
 
 namespace Audune.Persistence
 {
-  // Class that defines an adapter contained in a Unity component
-  public abstract class Adapter : MonoBehaviour, IAdapter
+  // Base class that defines an adapter for the persistence system
+  [RequireComponent(typeof(PersistenceSystem))]
+  public abstract class Adapter : MonoBehaviour
   {
     // Adapter properties
     [SerializeField, Tooltip("The name of the adapter")]
-    private string _adapterName;
-
-    // Internal state of the adapter
-    private PersistenceSystem _system;
+    private string _adapterName = "Adapter";
+    [SerializeField, Tooltip("The priority of the adapter")]
+    private int _adapterPriority;
 
 
     // Return the name of the adapter
     public string adapterName => _adapterName;
 
+    // Return the priority of the adapter
+    public int adapterPriority => _adapterPriority;
+
     // Return if the adapter is enabled
     public abstract bool adapterEnabled { get; }
-
-
-    // Awake is called when the script instance is being loaded
-    protected void Awake()
-    {
-      _system = FindObjectOfType<PersistenceSystem>();
-      if (_system == null)
-        throw new PersistenceException("Could not find a persistence system in the scene");
-    }
-
-    // OnEnable is called when the component becomes enabled
-    protected void OnEnable()
-    {
-      // Check if the system is not null
-      if (_system == null)
-        throw new AdapterException($"There is no system set for adapter {adapterName} of type {GetType()}");
-
-      // Register the adapter
-      _system.RegisterAdapter(this);
-    }
-
-    // OnDisable is called when the component becomes disabled
-    protected void OnDisable()
-    {
-      // Check if the system is not null
-      if (_system == null)
-        throw new AdapterException($"There is no system set for adapter {adapterName} of type {GetType()}");
-
-      // Unregister the adapter
-      _system.UnregisterAdapter(this);
-    }
 
 
     // List the available files in the adapter

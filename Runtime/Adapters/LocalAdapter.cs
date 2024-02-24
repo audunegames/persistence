@@ -7,22 +7,33 @@ using UnityEngine;
 namespace Audune.Persistence
 {
   // Class that defines an adapter that stores data on the local filesystem
-  [AddComponentMenu("Audune Persistence/Local Adapter")]
+  [AddComponentMenu("Audune/Persistence/Adapters/Local Adapter")]
   public class LocalAdapter : Adapter
   {
     // Enum that defines the directory type
     public enum DirectoryType
     {
-      DataPath,             // Stores files relative to Application.dataPath
-      PersistentDataPath,   // Stores files relative to Application.persistentDataPath
-      AppData,              // Stores files relative to %APPDATA% on Windows
-      LocalAppData,         // Stores files relative to %LOCALAPPDATA% on Windows
-      UserProfile,          // Stores files relative to %USERPROFILE% on Windows
+      [InspectorName("Unity Data Path")]
+      DataPath,
+      [InspectorName("Unity Persistent Data Path")]
+      PersistentDataPath,
+      [InspectorName("Unity StreamingAssets Path")]
+      StreamingAssetsPath,
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+      [InspectorName("Windows Application Data")]
+      ApplicationData,
+      [InspectorName("Windows Local Application Data")]
+      LocalApplicationData,
+      [InspectorName("Windows User Profile")]
+      UserProfile,
+      [InspectorName("Windows User Profile Documents")]
+      MyDocuments,
+#endif
     }
 
 
     // Local persistence adapter properties
-    [SerializeField, Tooltip("The root location to store files"), Space]
+    [SerializeField, Tooltip("The root location to store files")]
     private DirectoryType _root = DirectoryType.PersistentDataPath;
     [SerializeField, Tooltip("The directory to store files, relative to the directory type")]
     private string _directory = "Saves";
@@ -34,14 +45,27 @@ namespace Audune.Persistence
     public override bool adapterEnabled => true;
 
     // Return the absolute directory to store files
-    public string directory => _root switch {
-      DirectoryType.DataPath => Path.Combine(Application.dataPath, _directory),
-      DirectoryType.PersistentDataPath => Path.Combine(Application.persistentDataPath, _directory),
-      DirectoryType.AppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), _directory),
-      DirectoryType.LocalAppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), _directory),
-      DirectoryType.UserProfile => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), _directory),
-      _ => _directory,
-    };
+    public string directory {
+      get {
+        var directory = _directory
+          .Replace("$productName$", Application.productName)
+          .Replace("$companyName$", Application.companyName)
+          .Replace("$version$", Application.version);
+
+        return _root switch {
+          DirectoryType.DataPath => Path.Combine(Application.dataPath, directory),
+          DirectoryType.PersistentDataPath => Path.Combine(Application.persistentDataPath, directory),
+          DirectoryType.StreamingAssetsPath => Path.Combine(Application.streamingAssetsPath, directory),
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+          DirectoryType.ApplicationData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), directory),
+          DirectoryType.LocalApplicationData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), directory),
+          DirectoryType.UserProfile => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), directory),
+          DirectoryType.MyDocuments => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), directory),
+#endif
+          _ => directory,
+        };
+      }
+    }
 
 
     // Return the path for the specified source file

@@ -7,12 +7,12 @@ namespace Audune.Persistence
   public sealed class File : IEquatable<File>
   {
     // Persistence file properties
-    public readonly IAdapter adapter;
+    public readonly Adapter adapter;
     public readonly string path;
 
 
     // Constructor
-    internal File(IAdapter adapter, string path)
+    internal File(Adapter adapter, string path)
     {
       this.adapter = adapter;
       this.path = path;
@@ -75,7 +75,7 @@ namespace Audune.Persistence
     // Return if the file equals another file
     public bool Equals(File other)
     {
-      return other is not null && EqualityComparer<IAdapter>.Default.Equals(adapter, other.adapter) && path == other.path;
+      return other is not null && EqualityComparer<Adapter>.Default.Equals(adapter, other.adapter) && path == other.path;
     }
 
     // Return the hash code of the file

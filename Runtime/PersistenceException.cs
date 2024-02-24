@@ -2,7 +2,7 @@
 
 namespace Audune.Persistence
 {
-  // Class that defines an exception thrown while saving or loading persistent data
+  // Class that defines an exception thrown while interacting with the persistence system
   public class PersistenceException : Exception
   {
     // Constructor
