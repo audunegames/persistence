@@ -1,5 +1,7 @@
 # Audune Persistence
 
+[![openupm](https://img.shields.io/npm/v/com.audune.persistence?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.audune.persistence/)
+
 Store persistent data from your components on disk or in the cloud with an easily configurable persistence system.
 
 See the [wiki](https://github.com/audunegames/persistence/wiki) of the repository to get started with the package.
