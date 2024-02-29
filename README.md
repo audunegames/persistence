@@ -43,7 +43,7 @@ Scope(s): com.audune.persistence
 * Enter the following name in the corresponding field and click **Add**:
 
 ```
-com.audune.utils.unityeditor
+com.audune.persistence
 ```
 
 ## Installing as a Git package
