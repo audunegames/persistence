@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Audune.Persistence
 {
   // Class that defines a MessagePack formatter for states
-  public class MessagePackStateFormatter : IMessagePackFormatter<State>
+  internal class MessagePackStateFormatter : IMessagePackFormatter<State>
   {
     // Delegate that defines a MessagePack serializer
     public delegate void Serializer<TValue>(ref MessagePackWriter writer, TValue value, MessagePackSerializerOptions options);

@@ -116,14 +116,14 @@ namespace Audune.Persistence
     }
 
     // Read a deserializable object from the specified file into an existing object
-    public void Read<TState, TDeserializable>(File file, TDeserializable deserializable) where TState : State where TDeserializable : IDeserializable<TState>
+    public void Read<TState>(File file, IDeserializable<TState> deserializable) where TState : State
     {
       var state = Read<TState>(file);
       deserializable.Deserialize(state);
     }
 
     // Read a deserializable object from the specified file into an existing object with the provided context
-    public void Read<TState, TContext, TDeserializable>(File file, TDeserializable deserializable, TContext context) where TState : State where TDeserializable : IDeserializable<TState, TContext>
+    public void Read<TState, TContext>(File file, IDeserializable<TState, TContext> deserializable, TContext context) where TState : State
     {
       var state = Read<TState>(file);
       deserializable.Deserialize(state, context);
