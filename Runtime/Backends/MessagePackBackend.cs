@@ -1,4 +1,4 @@
-using Audune.Utils.UnityEditor;
+using Audune.Utils.Types;
 using MessagePack;
 
 namespace Audune.Persistence

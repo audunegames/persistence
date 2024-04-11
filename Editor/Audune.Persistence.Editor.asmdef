@@ -3,6 +3,8 @@
     "rootNamespace": "Audune.Persistence.Editor",
     "references": [
         "GUID:0c6a492feeded364ab19e08343a22086",
+        "GUID:241edfc528a436d4d8ad77e50bc4b164",
+        "GUID:99872d1abb4e50f41b0c10dfc418a795",
         "GUID:8d3eaed832bf78046bfb9b4fc4d6d44e",
         "GUID:cae9ba75d7e39b34f8eed004d047cc0e",
         "GUID:bbde805d927e795439d7a746d1749cab",
