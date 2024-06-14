@@ -1,21 +1,31 @@
 using MessagePack;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Audune.Persistence
 {
   // State that contains a Quaternion value
   [MessagePackFormatter(typeof(MessagePackStateFormatter))]
-  public class QuaternionState : State
+  public class QuaternionState : State, IDynamicObjectState
   {
     // The value of the quaternion
-    private readonly Quaternion value;
+    private Quaternion _value;
+
+
+    // Return the fields for the dynamic object
+    IReadOnlyDictionary<string, StateProperty> IDynamicObjectState.fields => new Dictionary<string, StateProperty> {
+      { "x", new StateProperty(() => _value.x, x => _value.x = x as FloatState ?? _value.x) },
+      { "y", new StateProperty(() => _value.y, y => _value.y = y as FloatState ?? _value.y) },
+      { "z", new StateProperty(() => _value.z, z => _value.z = z as FloatState ?? _value.z) },
+      { "w", new StateProperty(() => _value.w, w => _value.w = w as FloatState ?? _value.w) },
+    };
 
 
     // Constructor
     public QuaternionState(Quaternion value)
     {
-      this.value = value;
+      _value = value;
     }
 
 
@@ -29,18 +39,18 @@ namespace Audune.Persistence
     // Return if the quaternion equals another quaternion
     public bool Equals(QuaternionState other)
     {
-      return value == other.value;
+      return _value == other._value;
     }
 
     // Return the hash code of the integer
     public override int GetHashCode()
     {
-      return HashCode.Combine(value);
+      return HashCode.Combine(_value);
     }
     #endregion
 
     #region Implicit operators
-    public static implicit operator Quaternion(QuaternionState state) => state.value;
+    public static implicit operator Quaternion(QuaternionState state) => state._value;
     #endregion
   }
 }

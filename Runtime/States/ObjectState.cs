@@ -8,7 +8,7 @@ namespace Audune.Persistence
 {
   // State that defines an object containing key-state pairs
   [MessagePackFormatter(typeof(MessagePackStateFormatter))]
-  public class ObjectState : State, IReadOnlyCollection<KeyValuePair<string, State>>, IEquatable<ObjectState>
+  public class ObjectState : State, IObjectState, IEquatable<ObjectState>
   {
     // The dictionary of key-value pairs
     private readonly Dictionary<string, State> _fields;

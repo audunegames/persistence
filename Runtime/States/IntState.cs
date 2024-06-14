@@ -8,13 +8,13 @@ namespace Audune.Persistence
   public class IntState : State, IEquatable<IntState>
   {
     // The value of the integer
-    private readonly int value;
+    private readonly int _value;
 
 
     // Constructor
     public IntState(int value)
     {
-      this.value = value;
+      _value = value;
     }
 
 
@@ -28,19 +28,19 @@ namespace Audune.Persistence
     // Return if the integer equals another integer
     public bool Equals(IntState other)
     {
-      return value == other.value;
+      return _value == other._value;
     }
 
     // Return the hash code of the integer
     public override int GetHashCode()
     {
-      return HashCode.Combine(value);
+      return HashCode.Combine(_value);
     }
     #endregion
 
     #region Implicit operators
-    public static implicit operator int(IntState state) => state.value;
-    public static implicit operator long(IntState state) => state.value;
+    public static implicit operator int(IntState state) => state._value;
+    public static implicit operator long(IntState state) => state._value;
     #endregion
   }
 }

@@ -8,13 +8,13 @@ namespace Audune.Persistence
   public class FloatState : State, IEquatable<FloatState>
   {
     // The value of the float
-    private readonly float value;
+    private readonly float _value;
 
 
     // Constructor
     public FloatState(float value)
     {
-      this.value = value;
+      _value = value;
     }
 
 
@@ -28,19 +28,19 @@ namespace Audune.Persistence
     // Return if the float equals another float
     public bool Equals(FloatState other)
     {
-      return value == other.value;
+      return _value == other._value;
     }
 
     // Return the hash code of the float
     public override int GetHashCode()
     {
-      return HashCode.Combine(value);
+      return HashCode.Combine(_value);
     }
     #endregion
 
     #region Implicit operators
-    public static implicit operator float(FloatState state) => state.value;
-    public static implicit operator double(FloatState state) => state.value;
+    public static implicit operator float(FloatState state) => state._value;
+    public static implicit operator double(FloatState state) => state._value;
     #endregion
   }
 }

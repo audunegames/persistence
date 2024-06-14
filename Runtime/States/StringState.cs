@@ -8,13 +8,13 @@ namespace Audune.Persistence
   public class StringState : State
   {
     // The value of the string
-    private readonly string value;
+    private readonly string _value;
 
 
     // Constructor
     public StringState(string value)
     {
-      this.value = value;
+      _value = value;
     }
 
 
@@ -28,18 +28,18 @@ namespace Audune.Persistence
     // Return if the string equals another string
     public bool Equals(StringState other)
     {
-      return value == other.value;
+      return _value == other._value;
     }
 
     // Return the hash code of the integer
     public override int GetHashCode()
     {
-      return HashCode.Combine(value);
+      return HashCode.Combine(_value);
     }
     #endregion
     
     #region Implicit operators
-    public static implicit operator string(StringState state) => state.value;
+    public static implicit operator string(StringState state) => state._value;
     #endregion
   }
 }

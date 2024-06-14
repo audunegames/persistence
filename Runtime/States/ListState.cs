@@ -8,7 +8,7 @@ namespace Audune.Persistence
 {
   // State that defines an list of state items
   [MessagePackFormatter(typeof(MessagePackStateFormatter))]
-  public class ListState : State, IReadOnlyCollection<State>, IEquatable<ListState>
+  public class ListState : State, IListState, IEquatable<ListState>
   {
     // The items of the list
     private readonly List<State> _items;
