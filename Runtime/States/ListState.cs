@@ -26,9 +26,9 @@ namespace Audune.Persistence
 
     #region Getting items
     // Get an item with the specified index
-    public TState Get<TState>(int index) where TState : State
+    public TState Get<TState>(int index, TState defaultState = null) where TState : State
     {
-      return index >= 0 && index < _items.Count ? _items[index] as TState : null;
+      return index >= 0 && index < _items.Count ? _items[index] as TState ?? defaultState : defaultState;
     }
 
     // Return if an item with the specified index exists
@@ -61,7 +61,8 @@ namespace Audune.Persistence
     // Set an item with the specified index
     public void Set(int index, State state)
     {
-      _items[index] = state;
+      if (index >= 0 && index < _items.Count)
+        _items[index] = state;
     }
 
     // Set a new list with the specified index and return it

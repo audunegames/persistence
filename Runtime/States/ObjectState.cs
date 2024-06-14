@@ -31,9 +31,9 @@ namespace Audune.Persistence
 
     #region Getting fields
     // Get a field with the specified name
-    public TState Get<TState>(string name) where TState : State
+    public TState Get<TState>(string name, TState defaultState = null) where TState : State
     {
-      return _fields.TryGetValue(name, out var state) ? state as TState : null;
+      return _fields.TryGetValue(name, out var state) ? state as TState ?? defaultState : defaultState;
     }
 
     // Return if a field with the specified name exists
