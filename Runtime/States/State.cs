@@ -1,4 +1,5 @@
 using MessagePack;
+using System;
 using UnityEngine;
 
 namespace Audune.Persistence
@@ -7,8 +8,20 @@ namespace Audune.Persistence
   [MessagePackFormatter(typeof(MessagePackStateFormatter))]
   public abstract class State
   {
+    #region Enum methods
+    public static StringState FromEnum<TEnum>(TEnum value) where TEnum : struct, Enum
+    {
+      return new StringState(Enum.GetName(typeof(TEnum), value));
+    }
+
+    public static TEnum ToEnum<TEnum>(StringState state, TEnum defaultValue) where TEnum : struct, Enum
+    {
+      return Enum.TryParse<TEnum>(state, out var value) ? value : defaultValue;
+    }
+    #endregion
+
     #region Implicit operators
-    public static implicit operator State(bool value) => new BoolState(value);
+    public static implicit operator State(bool value) => value ? BoolState.True : BoolState.False;
     public static implicit operator State(int value) => new IntState(value);
     public static implicit operator State(long value) => new LongState(value);
     public static implicit operator State(float value) => new FloatState(value);
