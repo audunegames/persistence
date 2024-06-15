@@ -33,7 +33,7 @@ namespace Audune.Persistence
     // Return if the quaternion equals another object
     public override bool Equals(object other)
     {
-      return other != null && Equals(other as QuaternionState);
+      return other is QuaternionState state && Equals(state);
     }
 
     // Return if the quaternion equals another quaternion
@@ -51,6 +51,7 @@ namespace Audune.Persistence
 
     #region Implicit operators
     public static implicit operator Quaternion(QuaternionState state) => state._value;
+    public static implicit operator QuaternionState(Quaternion value) => new QuaternionState(value);
     #endregion
   }
 }

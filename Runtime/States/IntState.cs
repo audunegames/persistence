@@ -22,7 +22,7 @@ namespace Audune.Persistence
     // Return if the integer equals another object
     public override bool Equals(object other)
     {
-      return other != null && Equals(other as IntState);
+      return other is IntState state && Equals(state);
     }
 
     // Return if the integer equals another integer
@@ -41,6 +41,7 @@ namespace Audune.Persistence
     #region Implicit operators
     public static implicit operator int(IntState state) => state._value;
     public static implicit operator long(IntState state) => state._value;
+    public static implicit operator IntState(int value) => new IntState(value);
     #endregion
   }
 }

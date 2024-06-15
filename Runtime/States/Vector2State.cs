@@ -46,7 +46,7 @@ namespace Audune.Persistence
     // Return if the vector equals another object
     public override bool Equals(object other)
     {
-      return other != null && Equals(other as Vector2State);
+      return other is Vector2State state && Equals(state);
     }
 
     // Return if the vector equals another vector
@@ -64,6 +64,8 @@ namespace Audune.Persistence
 
     #region Implicit operators
     public static implicit operator Vector2(Vector2State state) => state._value;
+    public static implicit operator Vector2State(Vector2 value) => new Vector2State(value);
+    public static implicit operator Vector2State(Vector2Int value) => new Vector2State(value);
     #endregion
   }
 }

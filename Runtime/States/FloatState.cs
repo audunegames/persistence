@@ -22,7 +22,7 @@ namespace Audune.Persistence
     // Return if the float equals another object
     public override bool Equals(object other)
     {
-      return other != null && Equals(other as FloatState);
+      return other is FloatState state && Equals(state);
     }
 
     // Return if the float equals another float
@@ -41,6 +41,7 @@ namespace Audune.Persistence
     #region Implicit operators
     public static implicit operator float(FloatState state) => state._value;
     public static implicit operator double(FloatState state) => state._value;
+    public static implicit operator FloatState(float value) => new FloatState(value);
     #endregion
   }
 }

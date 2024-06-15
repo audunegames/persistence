@@ -22,7 +22,7 @@ namespace Audune.Persistence
     // Return if the string equals another object
     public override bool Equals(object other)
     {
-      return other != null && Equals(other as StringState);
+      return other is StringState state && Equals(state);
     }
 
     // Return if the string equals another string
@@ -40,6 +40,7 @@ namespace Audune.Persistence
     
     #region Implicit operators
     public static implicit operator string(StringState state) => state._value;
+    public static implicit operator StringState(string value) => new StringState(value);
     #endregion
   }
 }

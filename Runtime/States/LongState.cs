@@ -22,7 +22,7 @@ namespace Audune.Persistence
     // Return if the long equals another object
     public override bool Equals(object other)
     {
-      return other != null && Equals(other as LongState);
+      return other is LongState state && Equals(state);
     }
 
     // Return if the long equals another long
@@ -40,6 +40,8 @@ namespace Audune.Persistence
 
     #region Implicit operators
     public static implicit operator long(LongState state) => state._value;
+    public static implicit operator LongState(long value) => new LongState(value);
+    public static implicit operator LongState(int value) => new LongState(value);
     #endregion
   }
 }

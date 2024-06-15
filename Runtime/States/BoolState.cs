@@ -7,6 +7,11 @@ namespace Audune.Persistence
   [MessagePackFormatter(typeof(MessagePackStateFormatter))]
   public class BoolState : State, IEquatable<BoolState>
   {
+    // Static instances of bool states
+    public static readonly BoolState False = new BoolState(false);
+    public static readonly BoolState True = new BoolState(true);
+
+
     // The value of the boolean
     private readonly bool _value;
 
@@ -22,7 +27,7 @@ namespace Audune.Persistence
     // Return if the equals another object
     public override bool Equals(object other)
     {
-      return other != null && Equals(other as BoolState);
+      return other is BoolState state && Equals(state);
     }
 
     // Return if the boolean equals another boolean
@@ -40,6 +45,7 @@ namespace Audune.Persistence
 
     #region Implicit operators
     public static implicit operator bool(BoolState state) => state._value;
+    public static implicit operator BoolState(bool value) => new BoolState(value);
     #endregion
   }
 }
